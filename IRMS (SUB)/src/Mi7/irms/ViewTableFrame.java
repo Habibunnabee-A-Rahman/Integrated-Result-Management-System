@@ -1,0 +1,410 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
+ */
+package Mi7.irms;
+
+import javax.swing.DefaultComboBoxModel;
+import java.sql.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JLabel;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+
+/**
+ *
+ * @author himal
+ */
+public class ViewTableFrame extends javax.swing.JFrame {
+
+    /**
+     * Creates new form ViewTableFrame
+     */
+    String [] tables;
+    Connection connect;
+    PreparedStatement ps;
+    Statement stmt;
+    String T01_id;
+    
+    void passT01_id(String T01_id){
+        this.T01_id = T01_id;
+        jComboBox1.setSelectedIndex(0);
+    }
+    
+    void alert2bGeneration(int c,String msg1,String msg2,String msg3,String btext1,String btext2,String parent){
+        
+        
+        this.setEnabled(false);
+        AlertFrame2B a2frm = new AlertFrame2B(c,msg1,msg2,msg3,btext1,btext2);
+        a2frm.passViewTableFrame(this, parent);
+        a2frm.setLocationRelativeTo(null);
+        a2frm.setAlwaysOnTop(true);
+        a2frm.setVisible(true);         
+        
+    }
+    
+    void alertGeneration(int c,String msg1,String msg2,String msg3){
+        
+        
+        this.setEnabled(false);
+        AlertFrame afrm = new AlertFrame(c,msg1,msg2,msg3);
+        afrm.passViewTableFrame(this, "viewtableframe");
+        
+        
+        afrm.setLocationRelativeTo(null);
+        
+        afrm.setAlwaysOnTop(true);
+        afrm.setVisible(true);
+    }
+    
+    void showNormalTable(String sql){
+        try {
+                DefaultTableModel model = new DefaultTableModel();
+                ps = connect.prepareStatement(sql);
+                ps.setString(1, T01_id);
+                ResultSet rs = ps.executeQuery();
+                ResultSetMetaData rsmd = rs.getMetaData();
+
+                
+                int column_count = rsmd.getColumnCount();
+                
+                String [] column_names = new String [column_count]; 
+                 
+
+                for(int i=0, j=0; i<column_count; i++){
+                    
+                    column_names[j] = rsmd.getColumnName(i+1);
+                    j++;
+                }
+                
+
+                
+                model.setColumnIdentifiers(column_names);
+                
+                
+
+
+                while(rs.next()){
+                    Object [] row = new Object[column_count];
+                    for(int i=0,j=0; i<column_count; i++){
+
+                        
+                        row[j] = rs.getObject(i+1);  //adding each row one by one
+                        j++;
+                    }
+                    model.addRow(row);
+                }
+
+                jTable1.setModel(model);
+                DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+                centerRenderer.setHorizontalAlignment( JLabel.CENTER );                                     //centering column names
+                for(int i=0 ; i<column_count; i++){
+                    jTable1.getColumnModel().getColumn(i).setCellRenderer( centerRenderer );
+                }
+
+                jTable1.setShowGrid(true);
+
+            } catch (SQLException ex) {
+                //Logger.getLogger(ViewTableFrame.class.getName()).log(Level.SEVERE, null, ex);
+                reConnection();
+                int code = ex.getErrorCode();
+                String msg = "Error Code: "+code;
+                alertGeneration(3,"Error in Server Connection!!",msg,"Try Again!");
+            }
+    }
+    
+    void reConnection(){
+        try{
+            connect = DriverManager.getConnection("jdbc:mysql://localhost:3306/irms_db","irms_main","Mi7*sub-Pro-IRMS");
+            
+            
+        }catch(SQLException e){
+            
+            System.out.println(e);
+        }
+        
+    }
+    
+    
+    public ViewTableFrame(String [] tables) {
+        initComponents();
+        this.tables = tables;
+        jTable1.setEnabled(false);
+        try{
+            connect = DriverManager.getConnection("jdbc:mysql://localhost:3306/irms_db","irms_main","Mi7*sub-Pro-IRMS");
+            
+            jComboBox1.setModel(new DefaultComboBoxModel(tables));
+            jComboBox1.setSelectedIndex(0);
+        }catch(SQLException e){
+            reConnection();
+            int code = e.getErrorCode();
+            String msg = "Error Code: "+code;
+            alert2bGeneration(2,"Server Connection Failed!!",msg,"Please,Retry Connection or Quit!","Retry","Quit","ViewTableFrame");
+        }
+        //jComboBox1.removeAllItems(); //creates error as it invokes action 
+        
+        
+        
+    }
+
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        jPanel1 = new javax.swing.JPanel();
+        jPanel3 = new javax.swing.JPanel();
+        jPanel5 = new javax.swing.JPanel();
+        jLabel2 = new javax.swing.JLabel();
+        jPanel6 = new javax.swing.JPanel();
+        jLabel1 = new javax.swing.JLabel();
+        jComboBox1 = new javax.swing.JComboBox<>();
+        jPanel4 = new javax.swing.JPanel();
+        jButton1 = new javax.swing.JButton();
+        jPanel2 = new javax.swing.JPanel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        jTable1 = new javax.swing.JTable();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setTitle("Data Tables");
+        setPreferredSize(new java.awt.Dimension(800, 600));
+
+        jPanel1.setPreferredSize(new java.awt.Dimension(0, 80));
+        jPanel1.setLayout(new java.awt.BorderLayout());
+
+        jPanel3.setLayout(new java.awt.BorderLayout());
+
+        jPanel5.setPreferredSize(new java.awt.Dimension(100, 0));
+        jPanel5.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER, 5, 7));
+
+        jLabel2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/data_table_64.png"))); // NOI18N
+        jPanel5.add(jLabel2);
+
+        jPanel3.add(jPanel5, java.awt.BorderLayout.WEST);
+
+        jPanel6.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER, 5, 25));
+
+        jLabel1.setFont(new java.awt.Font("SansSerif", 1, 12)); // NOI18N
+        jLabel1.setText("Tabel: ");
+        jPanel6.add(jLabel1);
+
+        jComboBox1.setFont(new java.awt.Font("SansSerif", 0, 12)); // NOI18N
+        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        jComboBox1.setPreferredSize(new java.awt.Dimension(170, 25));
+        jComboBox1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jComboBox1ActionPerformed(evt);
+            }
+        });
+        jPanel6.add(jComboBox1);
+
+        jPanel3.add(jPanel6, java.awt.BorderLayout.CENTER);
+
+        jPanel1.add(jPanel3, java.awt.BorderLayout.CENTER);
+
+        jPanel4.setPreferredSize(new java.awt.Dimension(100, 0));
+        jPanel4.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER, 5, 25));
+
+        jButton1.setFont(new java.awt.Font("SansSerif", 0, 12)); // NOI18N
+        jButton1.setText("EXIT");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+        jPanel4.add(jButton1);
+
+        jPanel1.add(jPanel4, java.awt.BorderLayout.EAST);
+
+        getContentPane().add(jPanel1, java.awt.BorderLayout.NORTH);
+
+        jPanel2.setLayout(new java.awt.BorderLayout());
+
+        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null}
+            },
+            new String [] {
+                "Title 1", "Title 2", "Title 3", "Title 4"
+            }
+        ));
+        jScrollPane1.setViewportView(jTable1);
+
+        jPanel2.add(jScrollPane1, java.awt.BorderLayout.CENTER);
+
+        getContentPane().add(jPanel2, java.awt.BorderLayout.CENTER);
+
+        pack();
+    }// </editor-fold>//GEN-END:initComponents
+
+    private void jComboBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBox1ActionPerformed
+        // TODO add your handling code here:
+        String table = jComboBox1.getSelectedItem().toString();
+        //String table = "t01_university";
+        DefaultTableModel model = new DefaultTableModel();
+        
+        if(table.equals("t03_school")){
+            showNormalTable("SELECT school_id, school_name FROM `t03_school` WHERE T01_id_fk = ?");
+            return;
+        }
+        
+        if(table.equals("t04_department")){
+            showNormalTable("SELECT t03_school.school_id, t03_school.school_name,"
+                        + " t04_department.department_id,t04_department.department_name"
+                        + " FROM t04_department INNER JOIN t03_school ON t04_department.T03_id_fk = t03_school.T03_id"
+                        + " WHERE t03_school.T01_id_fk = ?");
+            return;
+        }
+        
+        if(table.equals("t05_program")){
+            showNormalTable("SELECT tempx.school_name, tempx.department_name, t05_program.program_id, t05_program.program_name FROM "
+                    + "(SELECT t03_school.school_name,t04_department.department_name,t04_department.T04_id FROM t04_department "
+                    + "INNER JOIN t03_school ON t03_school.T03_id = t04_department.T03_id_fk WHERE t03_school.T01_id_fk = ?) AS tempx "
+                    + "INNER JOIN t05_program ON t05_program.T04_id_fk = tempx.T04_id "
+                    + "ORDER BY tempx.school_name ASC, tempx.department_name ASC;");
+            return;
+        }
+        if(table.equals("t06_syllabus")){
+            showNormalTable("SELECT school_name, department_name, program_name, syllabus_id, syllabus_name FROM"
+                    + " ( SELECT tempx.school_name, tempx.department_name, t05_program.program_id, t05_program.program_name, t05_program.T05_id FROM"
+                    + " ( SELECT t03_school.school_name, t04_department.department_name, t04_department.T04_id FROM t04_department"
+                    + " INNER JOIN t03_school ON t03_school.T03_id = t04_department.T03_id_fk"
+                    + " WHERE t03_school.T01_id_fk = ? ) AS tempx INNER JOIN t05_program ON t05_program.T04_id_fk = tempx.T04_id ) AS tempy"
+                    + " INNER JOIN t06_syllabus ON t06_syllabus.T05_id_fk = tempy.T05_id "
+                    + "ORDER BY school_name ASC, department_name ASC, program_name ASC;");
+            
+            return;
+        }
+        
+        try {
+            ps = connect.prepareStatement("SELECT * FROM "+table);
+            //ps.setString(1, table);
+            ResultSet rs = ps.executeQuery();
+            ResultSetMetaData rsmd = rs.getMetaData();
+            
+            int minus_one = 0;
+            int skip_column_pos = -1;
+            int column_count = rsmd.getColumnCount();
+            int column_count_rev;
+            String [] column_names = new String [column_count]; 
+            String [] column_names_rev = new String [column_count-1]; 
+
+            for(int i=0, j=0; i<column_count; i++){
+                if(rsmd.getColumnName(i+1).equals("password")){
+                    minus_one = 1;                              //setting columns
+                    skip_column_pos = i+1;
+                    continue;
+                }
+                column_names[j] = rsmd.getColumnName(i+1);
+                j++;
+            }
+            column_count_rev = column_count - minus_one;
+            
+            if(column_count_rev == column_count){
+                model.setColumnIdentifiers(column_names);
+            }else{
+                for(int i=0;i<column_count_rev;i++){
+                    column_names_rev [i] = column_names[i];
+                }
+                model.setColumnIdentifiers(column_names_rev);
+            }
+            
+            
+            while(rs.next()){
+                Object [] row = new Object[column_count_rev];
+                for(int i=0,j=0; i<column_count; i++){
+                    
+                    if(i+1 == skip_column_pos){
+                        continue;
+                    }
+                    row[j] = rs.getObject(i+1);  //adding each row one by one
+                    j++;
+                }
+                model.addRow(row);
+            }
+            
+            jTable1.setModel(model);
+            DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+            centerRenderer.setHorizontalAlignment( JLabel.CENTER );                                     //centering column names
+            for(int i=0 ; i<column_count_rev; i++){
+                jTable1.getColumnModel().getColumn(i).setCellRenderer( centerRenderer );
+            }
+            
+            jTable1.setShowGrid(true);
+            
+        } catch (SQLException ex) {
+            //Logger.getLogger(ViewTableFrame.class.getName()).log(Level.SEVERE, null, ex);
+            reConnection();
+            int code = ex.getErrorCode();
+            String msg = "Error Code: "+code;
+            alertGeneration(3,"Error in Server Connection!!",msg,"Try Again!");
+        }
+        
+        
+    }//GEN-LAST:event_jComboBox1ActionPerformed
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        // TODO add your handling code here:
+        dispose();
+    }//GEN-LAST:event_jButton1ActionPerformed
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String args[]) {
+        /* Set the Nimbus look and feel */
+        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         */
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (ClassNotFoundException ex) {
+            java.util.logging.Logger.getLogger(ViewTableFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (InstantiationException ex) {
+            java.util.logging.Logger.getLogger(ViewTableFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (IllegalAccessException ex) {
+            java.util.logging.Logger.getLogger(ViewTableFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+            java.util.logging.Logger.getLogger(ViewTableFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        //</editor-fold>
+
+        /* Create and display the form */
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                String [] defaultx = new String [] {"default"};  
+                new ViewTableFrame(defaultx).setVisible(true);
+            }
+        });
+    }
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton jButton1;
+    private javax.swing.JComboBox<String> jComboBox1;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
+    private javax.swing.JPanel jPanel3;
+    private javax.swing.JPanel jPanel4;
+    private javax.swing.JPanel jPanel5;
+    private javax.swing.JPanel jPanel6;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JTable jTable1;
+    // End of variables declaration//GEN-END:variables
+}

@@ -1,0 +1,4 @@
+Requirement JDK18
+Database Name: irms_db
+Database ID ID: irms_main
+Database Password: Mi7*sub-Pro-IRMS

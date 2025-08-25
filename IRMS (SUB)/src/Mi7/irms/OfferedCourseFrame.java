@@ -1,0 +1,1093 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
+ */
+package Mi7.irms;
+
+
+import java.awt.Dimension;
+
+import java.awt.Toolkit;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.sql.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.ImageIcon;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+
+
+/**
+ *
+ * @author himal
+ */
+public class OfferedCourseFrame extends javax.swing.JFrame {
+
+    /**
+     * Creates new form EnterUniversity
+     */
+    Connection connect;
+    PreparedStatement ps;
+    
+    //String uni_id="";
+    String [] T03_id = new String [100];
+    String [] [] T14_id;
+    String idT06 = "";
+    String idT01 = "";
+    String syllabus_id = "";
+    boolean syllabus_status = true;
+    String idT14="None!";
+    MainFrame mfrm;
+    void reConnection(){
+        try{
+            connect = DriverManager.getConnection("jdbc:mysql://localhost:3306/irms_db","irms_main","Mi7*sub-Pro-IRMS");
+            connect.setAutoCommit(true);
+            
+        }catch(SQLException e){
+            System.out.println(e);
+        }
+        
+    }
+    void passMainFrame(MainFrame mfrm){
+        this.mfrm = mfrm;
+    }
+    
+    
+    
+    public OfferedCourseFrame(String idT06,String idT01) {
+        initComponents();
+        this.idT06 = idT06;
+        this.idT01 = idT01;
+        T14_id = new String[1][1];
+        T14_id[0][0] = "None!";
+        submitButton.setEnabled(false);
+        syllabus_status = true;
+        semesterComboBox.setEnabled(false);
+        idT14 ="None!";
+        
+        try{
+            
+            //PreparedStatement ps;
+            connect = DriverManager.getConnection("jdbc:mysql://localhost:3306/irms_db","irms_main","Mi7*sub-Pro-IRMS");
+            ps = connect.prepareStatement("SELECT syllabus_id FROM `t06_syllabus` WHERE T06_id = ?");
+            ps.setString(1, idT06);
+            ResultSet rs = ps.executeQuery();
+            while(rs.next()){
+                this.syllabus_id = rs.getString(1);
+            }
+            jLabel1.setText("OFFERED COURSE FOR: "+syllabus_id);
+            
+            
+            ps = connect.prepareStatement("SELECT T14_id,semester_id,semester_name,semester_status FROM `t14_semester` "
+                    + "WHERE T06_id_fk = ?",
+                    ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            ps.setString(1, idT06);
+            rs = ps.executeQuery();
+            rs.last();
+            int count = rs.getRow();
+            rs.beforeFirst();
+            if (count > 0) {
+                T14_id = new String[count][2];
+                String [] temp = new String [count];
+                for(int i=0;rs.next() && i<T14_id.length;i++){
+                    temp[i] = rs.getString(2)+"--"+rs.getString(3);
+                    T14_id[i][0] = rs.getString(1);
+                    T14_id[i][1] = rs.getString(4);
+                }
+                semesterComboBox.setModel(new DefaultComboBoxModel(temp));
+                semesterComboBox.setSelectedIndex(0);
+                semesterComboBox.setEnabled(true);
+            }
+            
+            
+            
+            
+            
+        }catch(SQLException e){
+            int code = e.getErrorCode();
+            String msg = "Error Code: "+code;
+            String [] options = {"Retry","Quit"};
+            ImageIcon icon_server_retry = new ImageIcon(getClass().getResource("/icon/server_retry_64.png"));
+            int select = JOptionPane.showOptionDialog(null, "Server Connection Failed!!\n"+msg+"\nPlease,Retry Connection or Quit!", "Connection Failed!", JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE, icon_server_retry, options, options[0]);
+            if(select==0){
+                OfferedCourseFrame eocfrm = new OfferedCourseFrame(this.idT06,this.idT01);
+                eocfrm.setLocationRelativeTo(null);
+                eocfrm.setVisible(true);
+                this.dispose();
+            }else{
+                this.dispose();
+            }
+            //alert2bGeneration(2,"Server Connection Failed!!",msg,"Please,Retry Connection or Quit!","Retry","Quit","entercourseinfoFrame");
+            System.out.println(e);
+        }
+    }
+
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        jPanel1 = new javax.swing.JPanel();
+        jLabel1 = new javax.swing.JLabel();
+        jPanel2 = new javax.swing.JPanel();
+        jPanel4 = new javax.swing.JPanel();
+        jLabel2 = new javax.swing.JLabel();
+        semesterComboBox = new javax.swing.JComboBox<>();
+        jPanel3 = new javax.swing.JPanel();
+        currentButton = new javax.swing.JButton();
+        jPanel6 = new javax.swing.JPanel();
+        submitButton = new javax.swing.JButton();
+        jPanel7 = new javax.swing.JPanel();
+        registerTeacherButton = new javax.swing.JButton();
+        jPanel8 = new javax.swing.JPanel();
+        registerStudentButton = new javax.swing.JButton();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setTitle("Offered Course");
+        setPreferredSize(new java.awt.Dimension(427, 562));
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosed(java.awt.event.WindowEvent evt) {
+                formWindowClosed(evt);
+            }
+        });
+
+        jPanel1.setPreferredSize(new java.awt.Dimension(234, 100));
+
+        jLabel1.setFont(new java.awt.Font("SansSerif", 1, 14)); // NOI18N
+        jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/offeredCourse_64.png"))); // NOI18N
+        jLabel1.setText("OFFERED COURSE FOR #default");
+        jPanel1.add(jLabel1);
+
+        getContentPane().add(jPanel1, java.awt.BorderLayout.NORTH);
+
+        jPanel2.setLayout(new java.awt.GridLayout(5, 1));
+
+        jLabel2.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        jLabel2.setText("Select Semester:");
+        jPanel4.add(jLabel2);
+
+        semesterComboBox.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        semesterComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "None!" }));
+        semesterComboBox.setPreferredSize(new java.awt.Dimension(180, 40));
+        semesterComboBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                semesterComboBoxActionPerformed(evt);
+            }
+        });
+        jPanel4.add(semesterComboBox);
+
+        jPanel2.add(jPanel4);
+
+        currentButton.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        currentButton.setText("Current Offered Course");
+        currentButton.setPreferredSize(new java.awt.Dimension(300, 40));
+        currentButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                currentButtonActionPerformed(evt);
+            }
+        });
+        jPanel3.add(currentButton);
+
+        jPanel2.add(jPanel3);
+
+        submitButton.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        submitButton.setText("Submit Offered Course");
+        submitButton.setPreferredSize(new java.awt.Dimension(300, 40));
+        submitButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                submitButtonActionPerformed(evt);
+            }
+        });
+        jPanel6.add(submitButton);
+
+        jPanel2.add(jPanel6);
+
+        registerTeacherButton.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        registerTeacherButton.setText("Assign Teacher");
+        registerTeacherButton.setPreferredSize(new java.awt.Dimension(300, 40));
+        registerTeacherButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                registerTeacherButtonActionPerformed(evt);
+            }
+        });
+        jPanel7.add(registerTeacherButton);
+
+        jPanel2.add(jPanel7);
+
+        registerStudentButton.setFont(new java.awt.Font("SansSerif", 0, 14)); // NOI18N
+        registerStudentButton.setText("Register Student");
+        registerStudentButton.setPreferredSize(new java.awt.Dimension(300, 40));
+        registerStudentButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                registerStudentButtonActionPerformed(evt);
+            }
+        });
+        jPanel8.add(registerStudentButton);
+
+        jPanel2.add(jPanel8);
+
+        getContentPane().add(jPanel2, java.awt.BorderLayout.CENTER);
+
+        pack();
+    }// </editor-fold>//GEN-END:initComponents
+
+    private void submitButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_submitButtonActionPerformed
+        
+        try {
+            connect.setAutoCommit(false);
+            ImageIcon warning = new ImageIcon(getClass().getResource("/icon/warning_64.png"));
+            ImageIcon error = new ImageIcon(getClass().getResource("/icon/error_2_64.png"));
+            ImageIcon data_error = new ImageIcon(getClass().getResource("/icon/error_data_64.png"));
+
+            PreparedStatement ps;
+            int combo_index = semesterComboBox.getSelectedIndex();
+            String temp_idT14 = T14_id[combo_index][0];
+            /*ps = connect.prepareStatement("SELECT * FROM `t06_syllabus` WHERE T06_id = ? AND ( syllabus_status IS NULL OR syllabus_status = 0);" );
+            ps.setString(1, idT06);
+            ResultSet rs = ps.executeQuery();
+            if(!rs.isBeforeFirst()){
+                deleteButton.setEnabled(false);
+                submitButton.setEnabled(false);
+                alertGeneration(1,"Warning!!","Syllabus is already Finalized!","Syllabus can not be Changed!");
+                return;
+                
+            }*/
+            if(T14_id[combo_index][1]!=null && !T14_id[combo_index][1].equals("0")){
+                JOptionPane.showMessageDialog(this, "Semester has Ended or Rigid", "Error!", JOptionPane.ERROR_MESSAGE, error);
+                submitButton.setEnabled(false);
+                return;
+            }
+            
+            
+            JFileChooser file_select = new JFileChooser();
+            file_select.setDialogTitle("Select Offered Course info Excel File");
+            int option = file_select.showOpenDialog(this);
+            if(option != JFileChooser.APPROVE_OPTION){
+                JOptionPane.showMessageDialog(this, "No File Selected!","Error",JOptionPane.INFORMATION_MESSAGE,warning);
+                return;
+            }
+            
+            File input_file = file_select.getSelectedFile();
+            FileInputStream fis = new FileInputStream(input_file);
+            Workbook wb = new XSSFWorkbook(fis);
+            Sheet sht = wb.getSheetAt(0);
+            
+            //checking titles are correct
+            String[] req_titles = {"course_id","offered"};
+            Row title_row = sht.getRow(0);
+            
+            if(title_row == null){
+                JOptionPane.showMessageDialog(this, "Invalid column format! Expected: course_id, offered", 
+                        "Format Error", JOptionPane.ERROR_MESSAGE,error);
+                wb.close();
+                
+                return;
+            }else{
+                for (int i = 0; i < req_titles.length; i++) {
+                    Cell cell = title_row.getCell(i, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
+                    if (!cell.toString().trim().equalsIgnoreCase(req_titles[i])) {
+                        JOptionPane.showMessageDialog(this, "Invalid column format! Expected: course_id, offered", 
+                            "Format Error", JOptionPane.ERROR_MESSAGE,error);
+                        wb.close();
+                        return;
+                    }
+                }
+            }
+            
+            
+            int row_count = sht.getLastRowNum()+1;
+            int col_count = req_titles.length;
+            String [] [] offered_course_info = new String [row_count-1][col_count];
+            
+            
+            //taking excel data to an 2d array
+            for(int i=0;i<row_count-1;i++){
+                Row row = sht.getRow(i+1);
+                if(row!=null){
+                    for(int j=0;j<col_count;j++){
+                        Cell cell = row.getCell(j, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
+                        offered_course_info[i][j] = cell.toString().trim();
+                        if(offered_course_info[i][j].equals("")){
+                            offered_course_info[i][j] = "-1";
+                        }
+                    }
+                }else{
+                    for(int j=0;j<col_count;j++){
+                        
+                        offered_course_info[i][j] = "-1";
+                    }
+                }
+            }
+            wb.close();
+            
+            /*//test/debug
+            System.out.println();
+            System.out.println(row_count);
+            for(int i=0;i<course_info.length;i++){
+                for(int j=0;j<col_count;j++){
+                    System.out.print(course_info[i][j]);
+                }
+                System.out.println();
+            }
+            wb.close();
+            */
+            
+            
+            //checking if there is any duplicate data in excel sheet
+            for(int i=0;i<offered_course_info.length;i++){
+                if(offered_course_info[i][0].equals("-1") && offered_course_info[i][1].equals("-1")){
+                    continue;
+                }
+                /*if(course_info[i][0].equals("-1") || course_info[i][1].equals("-1") || course_info[i][2].equals("-1")){
+                    JOptionPane.showMessageDialog(this, "Some course information is missing in the given Excel Sheet!!!", 
+                            "Missing Data!", JOptionPane.ERROR_MESSAGE,error_icon);
+                    return;
+                }*/
+                if(offered_course_info[i][0].equals("-1") && !offered_course_info[i][1].equals("-1")){
+                    JOptionPane.showMessageDialog(this, "Course ID is Missing for Filled Offered Cell!", "Data Error!", JOptionPane.ERROR_MESSAGE, data_error);
+                    return;
+                }
+                for(int j=i+1;j<offered_course_info.length;j++){
+                    if(offered_course_info[i][0].equals(offered_course_info[j][0])){
+                        JOptionPane.showMessageDialog(this, "There is Duplicate course_id in the given Excel Sheet!!!", 
+                            "Duplication Error!", JOptionPane.ERROR_MESSAGE,error);
+                        return;
+                     
+                    }
+                }
+            }
+            
+            
+            
+            
+            // taking previous data from the database to an 2D array
+            
+            String [][] pre_offered_course = new String [1][3];
+            for(int i=0;i<3;i++){
+                pre_offered_course[0][i] = "None!";
+            }
+            ps = connect.prepareStatement("SELECT t07_course.T07_id,t07_course.course_id,xyz.T15_id FROM t07_course"
+                    + " LEFT JOIN (SELECT * FROM t15_offered_course where t15_offered_course.T14_id_fk=?) AS xyz"
+                    + " ON t07_course.T07_id = xyz.T07_id_fk"
+                    + " WHERE t07_course.T06_id_fk=? ORDER BY course_id ASC;",
+                    ResultSet.TYPE_SCROLL_INSENSITIVE,ResultSet.CONCUR_READ_ONLY);
+            ps.setString(1, temp_idT14);
+            ps.setString(2, idT06);
+            ResultSet rs = ps.executeQuery();
+            rs.last();
+            int course_length = rs.getRow();
+            rs.beforeFirst();
+            if(course_length<=0){
+                JOptionPane.showMessageDialog(this, "No Course in DataBase", " Data Error!", JOptionPane.ERROR_MESSAGE, data_error);
+                submitButton.setEnabled(false);
+                return;
+            }
+            
+            pre_offered_course = new String [course_length][3];
+            for(int i=0;rs.next() && i<pre_offered_course.length;i++){
+                for(int j=0;j<3;j++){
+                    if(rs.getString(j+1)==null){
+                        pre_offered_course [i][j] = "-1";
+                    }else{
+                        pre_offered_course [i][j] = rs.getString(j+1);
+                    }
+                    
+                }
+                
+            }
+            
+            
+            
+            /*
+            String [] [] pre_course_info = new String [1][col_count+1];
+            for(int i=0;i<=col_count;i++){
+                pre_course_info[0][i] = "None!";
+            }
+            
+            //System.out.println(pre_course_info.length);
+            //int pre_row_count = 0;
+            ps = connect.prepareStatement("SELECT COUNT(*) FROM `t07_course` WHERE T06_id_fk = ?");
+            ps.setString(1, idT06);
+            rs = ps.executeQuery();
+            while(rs.next()){
+                if(rs.getInt(1)>0){
+                    pre_course_info = new String [rs.getInt(1)][col_count+1];
+                }
+                
+                //pre_row_count = rs.getInt(1);
+            }
+            
+            ps= connect.prepareStatement("SELECT course_id,course_name,course_credit FROM `t07_course` WHERE T06_id_fk = ?;");
+            ps.setString(1, idT06);
+            rs = ps.executeQuery();
+            for(int i=0;rs.next();i++){
+                for(int j=0;j<col_count;j++){
+                    pre_course_info [i][j] = rs.getString(j+1);
+                }
+                pre_course_info[i][col_count]="0";
+            }
+            
+            */
+            /*//test/debug
+            System.out.println();
+            System.out.println(pre_course_info.length);
+            for(int i=0;i<pre_course_info.length;i++){
+                for(int j=0;j<col_count+1;j++){
+                    System.out.print(" "+pre_course_info[i][j]);
+                }
+                System.out.println();
+            }*/
+            
+            
+            //Checking if there is any invalid data in Excel against the DataBase
+            for(int i=0;i<offered_course_info.length;i++){
+                if(offered_course_info[i][0].equals("-1")){
+                    continue;
+                }
+                for(int j=0;j<pre_offered_course.length;j++){
+                    if(offered_course_info[i][0].equals(pre_offered_course[j][1])){
+                        break;
+                    }else if(j==pre_offered_course.length-1){
+                        JOptionPane.showMessageDialog(this, "Invalid Course_id in Excel!!!", " Data Error!", JOptionPane.ERROR_MESSAGE, data_error);
+                        return;
+                    }
+                }
+            }
+            
+            
+            //Copying data to database
+            
+            for(int i=0;i<offered_course_info.length;i++){
+                if(offered_course_info[i][0].equals("-1")){
+                    continue;
+                }
+                for(int j=0;j<pre_offered_course.length;j++){
+                    if(offered_course_info[i][0].equals(pre_offered_course[j][1])){
+                        if(offered_course_info[i][1].toLowerCase().equals("x")){
+                            if(pre_offered_course[j][2].equals("-1")){
+                                ps = connect.prepareStatement("INSERT INTO `t15_offered_course`(`T07_id_fk`, `T14_id_fk`)"
+                                        + " VALUES (?,?)");
+                                ps.setString(1, pre_offered_course[j][0]);
+                                ps.setString(2, temp_idT14);
+                                int flag =ps.executeUpdate();
+                                if(flag==0){
+                                    throw new SQLException("Update Error!","HY000",6969);
+                                }
+                            }else{
+                                pre_offered_course[j][2] = "-1";
+                            }
+                        }else if(!offered_course_info[i][1].toLowerCase().equals("x") && !offered_course_info[i][1].toLowerCase().equals("-1")){
+                            throw new SQLException("Input Data Error in Excel!","HY000",6969);
+                        }
+                        break;
+                    }
+                }
+            }
+            
+            
+            
+            
+            /*
+            for(int i=0;i<course_info.length;i++){
+                if(course_info[i][0].equals("-1")){
+                    continue;
+                }
+                //System.out.println("loop"+pre_course_info.length);
+                for(int j=0;j<pre_course_info.length;j++){
+                    
+                    if(course_info[i][0].equals(pre_course_info[j][0])){
+                        ps = connect.prepareStatement("UPDATE `t07_course` SET"
+                                + " `course_name`= ?,`course_credit`= ? WHERE course_id= ? AND T06_id_fk= ?;");
+                        ps.setString(1,course_info[i][1]);
+                        ps.setString(2,course_info[i][2]);
+                        ps.setString(3,course_info[i][0]);
+                        ps.setString(4, idT06);
+                        ps.executeUpdate();
+                        pre_course_info[j][col_count]="1";
+                        break;
+                    }else if(j==pre_course_info.length-1){
+                        ps = connect.prepareStatement("INSERT INTO `t07_course` (`course_id`, `T06_id_fk`, `course_name`, `course_credit`) "
+                                + "VALUES (?, ?, ?, ?);");
+                        ps.setString(1, course_info[i][0]);
+                        ps.setString(2, idT06);
+                        ps.setString(3, course_info[i][1]);
+                        ps.setString(4, course_info[i][2]);
+                        ps.executeUpdate();
+                        
+                    }
+                             
+                }
+            }
+            */
+            
+            /*//test/debug
+            System.out.println();
+            System.out.println();
+            System.out.println();
+            System.out.println(pre_course_info.length);
+            for(int i=0;i<pre_course_info.length;i++){
+                for(int j=0;j<col_count+1;j++){
+                    System.out.print(" "+pre_course_info[i][j]);
+                }
+                System.out.println();
+            }
+            */
+            
+            
+            
+            
+            //deleting data from database that is not present in the excel
+            for(int i=0;i<pre_offered_course.length;i++){
+                if(!pre_offered_course[i][2].equals("-1")){
+                    ps = connect.prepareStatement("DELETE FROM `t15_offered_course` WHERE T15_id = ?;");
+                    ps.setString(1, pre_offered_course[i][2]);
+                    if(ps.executeUpdate()<=0){
+                        throw new SQLException("Delete Error!","HY000",6969);
+                    }
+                }
+            }
+            
+            
+            //Entering Exam
+            String [] T15_id;
+            ps = connect.prepareStatement("SELECT T15_id FROM `t15_offered_course` WHERE T14_id_fk = ?",ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            
+            ps.setString(1, temp_idT14);
+            rs = ps.executeQuery();
+            rs.last();
+            int temp_count = 0;
+            temp_count = rs.getRow();
+            rs.beforeFirst();
+            if(temp_count>0){
+                
+                T15_id = new String[temp_count];
+                for (int i = 0; rs.next() && i < T15_id.length; i++) {
+                    T15_id[i] = rs.getString(1);
+                }
+                ps = connect.prepareStatement("SELECT t18_exam.T18_id FROM `t18_exam` JOIN t15_offered_course "
+                        + "ON t18_exam.T15_id_fk=t15_offered_course.T15_id WHERE t15_offered_course.T14_id_fk = ?",
+                        ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+                String[] T18_id={"None!"};
+                ps.setString(1, temp_idT14);
+                rs = ps.executeQuery();
+                rs.last();
+                int t18_count = 0;
+                t18_count = rs.getRow();
+                rs.beforeFirst();
+                
+                if (t18_count > 0) {
+                    T18_id = new String[t18_count];
+                    for (int i = 0; rs.next() && i < T18_id.length; i++) {
+                        T18_id[i] = rs.getString(1);
+
+                    }
+                }
+                
+                for (int i = 0; i < T15_id.length ; i++) {
+                    ps = connect.prepareStatement("DELETE FROM `t18_exam` WHERE T15_id_fk = ?");
+                    //System.out.println(T15_id[i]);
+                    ps.setString(1, T15_id[i]);
+                    ps.executeUpdate();
+                }
+                
+                //Insert
+                for (int i = 0,j=0; i < T15_id.length; i++) {
+
+                    ps = connect.prepareStatement("SELECT t11_evaluation.T11_id "
+                            + "FROM (SELECT t12_unique_course_evaluation.T08_id_fk FROM `t15_offered_course` "
+                            + "JOIN t12_unique_course_evaluation ON t15_offered_course.T07_id_fk=t12_unique_course_evaluation.T07_id_fk"
+                            + " WHERE t15_offered_course.T15_id = ?) AS xyz "
+                            + "JOIN t11_evaluation ON xyz.T08_id_fk = t11_evaluation.T08_id_fk",
+                            ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+                    ps.setString(1, T15_id[i]);
+                    rs = ps.executeQuery();
+                    rs.last();
+                    temp_count = rs.getRow();
+                    rs.beforeFirst();
+                    if (temp_count <= 0) {
+                        ps = connect.prepareStatement("SELECT t11_evaluation.T11_id "
+                                + "FROM t11_evaluation "
+                                + "JOIN t06_syllabus ON t06_syllabus.default_T08_id_fk = t11_evaluation.T08_id_fk "
+                                + "WHERE T06_id = ?");
+                        ps.setString(1, idT06);
+                        rs = ps.executeQuery();
+                    }
+
+                    while (rs.next()) {
+                        if (t18_count>0 && j < T18_id.length) {
+                            ps = connect.prepareStatement("INSERT INTO `t18_exam`(`T18_id`, `T15_id_fk`, `T11_id_fk`)"
+                                    + " VALUES (?,?,?)");
+                            ps.setString(1, T18_id[j]);
+                            ps.setString(2, T15_id[i]);
+                            ps.setString(3, rs.getString(1));
+                            if (ps.executeUpdate() <= 0) {
+                                throw new SQLException("Update Error!");
+                            }
+                            j++;
+                        } else {
+                            ps = connect.prepareStatement("INSERT INTO `t18_exam`(`T15_id_fk`, `T11_id_fk`)"
+                                    + " VALUES (?,?)");
+
+                            ps.setString(1, T15_id[i]);
+                            ps.setString(2, rs.getString(1));
+                            if (ps.executeUpdate() <= 0) {
+                                throw new SQLException("Update Error!");
+                            }
+                        }
+                    }
+
+                }
+
+                    
+                    
+
+                
+
+            }
+            
+            
+            
+            
+            connect.commit();
+            connect.setAutoCommit(true);
+            ImageIcon success = new ImageIcon(getClass().getResource("/icon/success_64.png"));
+            JOptionPane.showMessageDialog(this, "Offered Cour Entry Successful!", "Success!", JOptionPane.ERROR_MESSAGE, success);
+
+            
+            
+        } catch (SQLException ex) {
+            try {
+                connect.rollback();
+                connect.setAutoCommit(true);
+            } catch (SQLException ex1) {
+                Logger.getLogger(OfferedCourseFrame.class.getName()).log(Level.SEVERE, null, ex1);
+            }
+            Logger.getLogger(EndSemesterFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(EndSemesterFrame.class.getName()).log(Level.SEVERE, null, ex);
+            
+            ImageIcon icon_server_error = new ImageIcon(getClass().getResource("/icon/server_error_2_64.png"));
+            ImageIcon icon_data_error = new ImageIcon(getClass().getResource("/icon/error_data_64.png"));
+
+            
+            int code = ex.getErrorCode();
+            String error = ex.getMessage();
+            String msg = "Error Code: " + code;
+            String[] options = {"OK"};
+            if (error.equals("Delete Error!") || error.equals("Update Error!")||error.equals("Input Data Error in Excel!")) {
+                JOptionPane.showMessageDialog(this, "Error: "+error, "DataBase Error!", JOptionPane.ERROR_MESSAGE, icon_data_error);
+
+            } else if (code == 0) {
+                this.reConnection();
+                int select = JOptionPane.showOptionDialog(this, "Error Server Connection!!\n" + msg + "\nTry Again!", "Connection Failed!",
+                        JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE, icon_server_error, options, options[0]);
+                if (select == JOptionPane.CLOSED_OPTION || select == 0) {
+                    this.reConnection();
+                }
+            } else {
+                JOptionPane.showOptionDialog(this, "Error in Data Entry!!\n" + msg + "\nTry Again!", "Data Entry Failed!",
+                        JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE, icon_data_error, options, options[0]);
+            }
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(OfferedCourseFrame.class.getName()).log(Level.SEVERE, null, ex);
+            ImageIcon error_not_found = new ImageIcon(getClass().getResource("/icon/not_found_64.png"));
+            JOptionPane.showMessageDialog(this, """
+                                                File not Found!!
+                                                Something went wrong in importing xlsx!!
+                                                Try Again!!""", "Error File!", JOptionPane.ERROR_MESSAGE, error_not_found);
+
+
+        } catch (IOException ex) {
+            Logger.getLogger(OfferedCourseFrame.class.getName()).log(Level.SEVERE, null, ex);
+            ImageIcon error_page = new ImageIcon(getClass().getResource("/icon/error-page_64.png"));
+            JOptionPane.showMessageDialog(this, """
+                                                Error in exportng File!!
+                                                Something went wrong in exporting xlsx!
+                                                Try Again!""", "Error File!", JOptionPane.ERROR_MESSAGE, error_page);
+
+            //Logger.getLogger(EnterCourseInfoFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_submitButtonActionPerformed
+
+    private void currentButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_currentButtonActionPerformed
+        // TODO add your handling code here:
+        try {
+            // TODO add your handling code here:
+            connect.setAutoCommit(true);
+            
+            String temp_idT14 = T14_id [semesterComboBox.getSelectedIndex()][0];
+            if(temp_idT14.isBlank() || temp_idT14.equals("None!")){
+                ImageIcon error = new ImageIcon(getClass().getResource("/icon/error_2_64.png"));
+                JOptionPane.showMessageDialog(this, "Semester Doesn't Exist", "Error!", JOptionPane.ERROR_MESSAGE, error);
+                return;
+            }
+            
+            PreparedStatement ps = connect.prepareStatement("SELECT t07_course.course_id,xyz.T15_id FROM t07_course "
+                    + "LEFT JOIN (SELECT * FROM t15_offered_course where t15_offered_course.T14_id_fk=?) AS xyz "
+                    + "ON t07_course.T07_id = xyz.T07_id_fk "
+                    + "WHERE t07_course.T06_id_fk= ? ORDER BY course_id ASC;");
+            ps.setString(1, temp_idT14);
+            ps.setString(2, idT06);
+            ResultSet rs = ps.executeQuery();
+            
+            Workbook wb = new XSSFWorkbook();
+            Sheet sht = wb.createSheet("offered_course");
+            
+            ResultSetMetaData md = rs.getMetaData();
+            int col_count = md.getColumnCount();
+            Row title_row = sht.createRow(0);
+            String [] titles ={"course_id","offered"};
+            
+            for (int i = 0; i < col_count; i++) {
+                
+                Cell cell = title_row.createCell(i);
+                //cell.setCellValue(md.getColumnName(i+1));
+                cell.setCellValue(titles[i]);
+                
+                CellStyle style = wb.createCellStyle();
+                Font font = wb.createFont();
+                font.setBold(true);
+                style.setFont(font);
+                cell.setCellStyle(style);
+            }
+            
+            
+            //Instruction for Excel
+            Row inst = sht.createRow(15);
+            Cell cell_inst = inst.createCell(3);
+
+            cell_inst.setCellValue("Enter \"X\" in offered column to Select");
+
+            CellStyle style_inst = wb.createCellStyle();
+            Font font = wb.createFont();
+            font.setBold(true);
+            style_inst.setFont(font);
+            cell_inst.setCellStyle(style_inst);
+
+
+            
+                
+            for(int i=1;rs.next();i++){
+                Row row = sht.createRow(i);
+                /*for(int j=0;j<col_count;j++){
+                    Cell cell = row.createCell(j);   //cell index starts from 0
+                    cell.setCellValue(rs.getString(j+1)); 
+                }*/
+                Cell cell = row.createCell(0);
+                cell.setCellValue(rs.getString(1));
+                
+                if(rs.getString(2)!= null){
+                    cell = row.createCell(1);
+                    cell.setCellValue("X");
+                }else{
+                    cell = row.createCell(1);
+                    cell.setCellValue("");
+                }
+                
+            }
+            
+            for (int i = 0; i < col_count; i++) {
+                sht.autoSizeColumn(i);                   //resize column width
+            }
+            
+            JFileChooser file_chooser = new JFileChooser();
+            file_chooser.setDialogTitle("Save Offered Course info File");
+            file_chooser.setSelectedFile(new File("Offered_Course_info.xlsx"));
+            
+            int select = file_chooser.showSaveDialog(null);
+            if(select == JFileChooser.APPROVE_OPTION){
+                File save_file = file_chooser.getSelectedFile();
+                if(!save_file.getAbsolutePath().endsWith(".xlsx")){
+                    save_file = new File(save_file.getAbsolutePath()+".xlsx");
+                }
+                FileOutputStream fos = new FileOutputStream(save_file);
+                wb.write(fos);
+                wb.close();
+                fos.close();
+                JOptionPane.showMessageDialog(this, "OfferedCourseInfo Excel file saved to: " + save_file.getAbsolutePath());
+
+                
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(EndSemesterFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(EndSemesterFrame.class.getName()).log(Level.SEVERE, null, ex);
+            int code = ex.getErrorCode();
+            String msg = "Error Code: " + code;
+            String[] options = {"OK"};
+            ImageIcon icon_server_error = new ImageIcon(getClass().getResource("/icon/server_error_2_64.png"));
+            ImageIcon icon_data_error = new ImageIcon(getClass().getResource("/icon/error_data_64.png"));
+            
+            if (code == 0) {
+                this.reConnection();
+                int select = JOptionPane.showOptionDialog(this, "Error Server Connection!!\n" + msg + "\nTry Again!", "Connection Failed!",
+                        JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE, icon_server_error, options, options[0]);
+                if (select == JOptionPane.CLOSED_OPTION || select == 0) {
+                    this.reConnection();
+                }
+            } else {
+                JOptionPane.showOptionDialog(this, "Error in Data Fetch!!\n" + msg + "\nTry Again!", "Data Fetch Failed!",
+                        JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE, icon_data_error, options, options[0]);
+            }
+        } catch (IOException ex) {
+            ImageIcon error_page = new ImageIcon(getClass().getResource("/icon/error-page_64.png"));
+            String[] options = {"OK"};
+            Logger.getLogger(OfferedCourseFrame.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showOptionDialog(this, """
+                                               Error in saving File!!!!
+                                               Something went wrong in importing xlsx
+                                               Try Again!""", "Data Fetch Failed!",
+                        JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE, error_page, options, options[0]);
+            
+            
+
+        }
+    }//GEN-LAST:event_currentButtonActionPerformed
+
+    private void semesterComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_semesterComboBoxActionPerformed
+        // TODO add your handling code here:
+        if(semesterComboBox.getItemAt(0).trim().equals("None!")){
+            semesterComboBox.setEnabled(false);
+            return;
+        }
+        int index = semesterComboBox.getSelectedIndex();
+        if(T14_id[index][1].trim().equals("0")){
+            submitButton.setEnabled(true);
+        }else{
+            submitButton.setEnabled(false);
+        }
+    }//GEN-LAST:event_semesterComboBoxActionPerformed
+
+    private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
+        // TODO add your handling code here:
+        mfrm.setEnabled(true);
+        mfrm.setAlwaysOnTop(true);
+        mfrm.setAlwaysOnTop(false);
+    }//GEN-LAST:event_formWindowClosed
+
+    private void registerTeacherButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_registerTeacherButtonActionPerformed
+        // TODO add your handling code here:
+        idT14 = T14_id [semesterComboBox.getSelectedIndex()][0];
+        if(idT14.equals("None!")){
+            ImageIcon error = new ImageIcon(getClass().getResource("/icon/error_2_64.png"));
+            JOptionPane.showMessageDialog(this, "Semester Doesn't Exist", "Error!", JOptionPane.ERROR_MESSAGE, error);
+            return;
+        }
+        RegisterTeacherFrame rtfrm = new RegisterTeacherFrame(idT06,idT01,idT14);
+        rtfrm.setLocationRelativeTo(null);
+        rtfrm.passOfferedCourseFrame(this);
+        rtfrm.setVisible(true);
+        this.setEnabled(false);
+        
+    }//GEN-LAST:event_registerTeacherButtonActionPerformed
+
+    private void registerStudentButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_registerStudentButtonActionPerformed
+        // TODO add your handling code here:
+        idT14 = T14_id [semesterComboBox.getSelectedIndex()][0];
+        if(idT14.equals("None!")){
+            ImageIcon error = new ImageIcon(getClass().getResource("/icon/error_2_64.png"));
+            JOptionPane.showMessageDialog(this, "Semester Doesn't Exist", "Error!", JOptionPane.ERROR_MESSAGE, error);
+            return;
+        }
+        RegisterStudentFrame rstufrm = new RegisterStudentFrame(idT06,idT01,idT14);
+        rstufrm.setLocationRelativeTo(null);
+        rstufrm.passOfferedCourseFrame(this);
+        rstufrm.setVisible(true);
+        this.setEnabled(false);
+    }//GEN-LAST:event_registerStudentButtonActionPerformed
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String args[]) {
+        /* Set the Nimbus look and feel */
+        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         */
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (ClassNotFoundException ex) {
+            java.util.logging.Logger.getLogger(OfferedCourseFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (InstantiationException ex) {
+            java.util.logging.Logger.getLogger(OfferedCourseFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (IllegalAccessException ex) {
+            java.util.logging.Logger.getLogger(OfferedCourseFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+            java.util.logging.Logger.getLogger(OfferedCourseFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+
+        /* Create and display the form */
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new OfferedCourseFrame("default","default").setVisible(true);
+            }
+        });
+    }
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton currentButton;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
+    private javax.swing.JPanel jPanel3;
+    private javax.swing.JPanel jPanel4;
+    private javax.swing.JPanel jPanel6;
+    private javax.swing.JPanel jPanel7;
+    private javax.swing.JPanel jPanel8;
+    private javax.swing.JButton registerStudentButton;
+    private javax.swing.JButton registerTeacherButton;
+    private javax.swing.JComboBox<String> semesterComboBox;
+    private javax.swing.JButton submitButton;
+    // End of variables declaration//GEN-END:variables
+}

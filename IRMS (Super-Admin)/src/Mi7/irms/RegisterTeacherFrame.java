@@ -1,0 +1,1418 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
+ */
+package Mi7.irms;
+
+
+import java.awt.Dimension;
+
+import java.awt.Toolkit;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.sql.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.ImageIcon;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+
+
+/**
+ *
+ * @author himal
+ */
+public class RegisterTeacherFrame extends javax.swing.JFrame {
+
+    /**
+     * Creates new form EnterUniversity
+     */
+    Connection connect;
+    Statement stmt;
+    
+    //String uni_id="";
+    String [] T03_id = new String [100];
+    String idT06 = "";
+    String idT01 = "";
+    String idT14 = "";
+    String syllabus_id = "";
+    String [] T07_id = {"None!"};
+    String [] T15_id = {"None!"};
+    String [] [] prev_T15info;
+    int delete_row_index = -1;
+    String [] T16_id;
+    OfferedCourseFrame ofcfrm;
+    
+    
+    void passOfferedCourseFrame(OfferedCourseFrame ofcfrm){
+        this.ofcfrm = ofcfrm;
+    }
+    
+    void reConnection(){
+        try{
+            connect = DriverManager.getConnection("jdbc:mysql://localhost:3306/irms_db","irms_main","Mi7*sub-Pro-IRMS");
+            connect.setAutoCommit(true);
+            
+        }catch(SQLException e){
+            System.out.println(e);
+        }
+        
+    }
+    
+    
+    
+    
+    
+    public RegisterTeacherFrame(String idT06,String idT01,String idT14) {
+        initComponents();
+        this.idT06 = idT06;
+        this.idT01 = idT01;
+        this.idT14 = idT14;
+        //System.out.println(idT01 +" " +idT06+" " + idT14);
+        semesterTextField.setEditable(false);
+        countTextField.setEditable(false);
+        courseComboBox.setEnabled(false);
+        teacherComboBox.setEnabled(false);
+        registerButton.setEnabled(false);
+        deleteButton.setEnabled(false);
+        saveButton.setEnabled(false);
+        
+        jTable.setEnabled(false);
+        JTableHeader header = jTable.getTableHeader();
+        header.setReorderingAllowed(false);
+        jTable.setShowGrid(true);
+        
+        
+        delete_row_index = -1;
+        
+        T07_id = new String[1];
+        T07_id[0] = "None!";
+        T16_id = new String [1];
+        T16_id[0]= "None!";
+        T15_id = new String [1];
+        T15_id[0]= "None!";
+        
+        prev_T15info = new String[1][5];
+        
+        for(int i=0;i<5;i++){
+            prev_T15info[0][i] = "None!";
+        }
+        
+        
+        
+        try{
+            
+            PreparedStatement ps;
+            connect = DriverManager.getConnection("jdbc:mysql://localhost:3306/irms_db","irms_main","Mi7*sub-Pro-IRMS");
+            connect.setAutoCommit(true);
+            ps = connect.prepareStatement("SELECT semester_id,semester_name "
+                    + "FROM `t14_semester` WHERE T14_id = ? ");
+            ps.setString(1, idT14);
+            ResultSet rs = ps.executeQuery();
+            if(rs.next()){
+                String temp = rs.getString(1)+"--"+rs.getString(2);
+                semesterTextField.setText(temp);
+            }else{
+                throw new SQLException("MAJOR ERROR","HY000",2);
+            }
+            
+           
+            
+            //teacher comboBox
+            ps = connect.prepareStatement("SELECT T16_id,employee_id,employee_name FROM `t16_employee` "
+                    + "WHERE T01_id_fk = ? AND T02_id_fk = 2 ORDER BY employee_id ASC",
+                    ResultSet.TYPE_SCROLL_INSENSITIVE,ResultSet.CONCUR_READ_ONLY);
+            ps.setString(1, idT01);
+            rs = ps.executeQuery();
+            //System.out.println(idT01);
+            int tcombo_len = 0;
+            rs.last();
+            tcombo_len = rs.getRow();
+            rs.beforeFirst();
+            //System.out.println(tcombo_len);
+            if(tcombo_len>0){
+                T16_id = new String[tcombo_len];
+                String [] temp = new String[tcombo_len];
+                int i=0;
+                while (rs.next()) {
+                    String [] temp_name = rs.getString(3).trim().split(" ");
+                    temp[i] = rs.getString(2)+"--"+ temp_name[0];
+                    //System.out.println(rs.getString(2));
+                    T16_id [i] = rs.getString(1);
+                    i++;
+                }
+                
+                teacherComboBox.setModel(new DefaultComboBoxModel(temp));
+                //teacherComboBox.setEnabled(true);
+            }
+           
+            //course comboBox
+            ps = connect.prepareStatement("SELECT t07_course.T07_id,t07_course.course_id,t15_offered_course.T15_id FROM `t15_offered_course` "
+                    + "JOIN t07_course ON t15_offered_course.T07_id_fk = t07_course.T07_id "
+                    + "WHERE T14_id_fk=? ORDER BY t07_course.course_id ASC",
+                    ResultSet.TYPE_SCROLL_INSENSITIVE,ResultSet.CONCUR_READ_ONLY); 
+            ps.setString(1, idT14);
+            rs = ps.executeQuery();
+            
+            int c_combo_len=0;
+            rs.last();
+            c_combo_len = rs.getRow();
+            rs.beforeFirst();
+            if(c_combo_len>0){
+                T07_id = new String[c_combo_len];
+                T15_id = new String[c_combo_len];
+                String [] temp = new String[c_combo_len];
+                int i=0;
+                while (rs.next()) {
+                    temp[i] = rs.getString(2);
+                    T07_id [i] = rs.getString(1);
+                    T15_id [i] = rs.getString(3);
+                    i++;
+                }
+                courseComboBox.setModel(new DefaultComboBoxModel(temp));
+                //courseComboBox.setEnabled(true);
+            }
+            
+            //table
+            
+            ps = connect.prepareStatement("SELECT xyz.T15_id,xyz.T07_id,xyz.course_id,xyz.T16_id_fk,t16_employee.employee_name,t16_employee.employee_id"
+                    + " FROM (SELECT t15_offered_course.T15_id,t07_course.T07_id,t07_course.course_id,t15_offered_course.T16_id_fk "
+                    + "FROM `t07_course`JOIN t15_offered_course "
+                    + "ON t07_course.T07_id = t15_offered_course.T07_id_fk "
+                    + "WHERE t07_course.T06_id_fk = ? AND t15_offered_course.T14_id_fk = ? "
+                    + "ORDER BY t07_course.course_id ASC) AS xyz JOIN t16_employee ON t16_employee.T16_id = xyz.T16_id_fk "
+                    + "WHERE t16_employee.T02_id_fk=2 ORDER BY course_id ASC;",
+                    ResultSet.TYPE_SCROLL_INSENSITIVE,ResultSet.CONCUR_READ_ONLY);
+            
+            ps.setString(1, idT06);// This can be deleted 
+                                            //AS semester already ensures rigth syllabus is selected
+            
+            ps.setString(2, idT14);
+            rs =ps.executeQuery();
+            
+            int tLength =0;
+            rs.last();
+            tLength = rs.getRow();
+            rs.beforeFirst();
+            if(tLength>0){
+                prev_T15info = new String [tLength][5];
+                Object [][] obj = new Object[tLength][2];
+                for(int i=0;rs.next() && i <prev_T15info.length;i++){
+                    prev_T15info[i][0] = rs.getString(1); //T15
+                    prev_T15info[i][1] = rs.getString(2); //T07
+                    
+                    prev_T15info[i][2] = rs.getString(3); //course_id
+                    obj[i][0] = rs.getString(3);
+                    
+                    prev_T15info[i][3] = rs.getString(4); //T16
+                    
+                    String [] table_t_name = rs.getString(5).trim().split(" "); //employee name
+                    prev_T15info[i][4] = rs.getString(6)+"--"+table_t_name[0]; //employee id + name
+                    obj[i][1] = prev_T15info[i][4];
+                }
+                jTable.setEnabled(false);
+                DefaultTableModel dModel = (DefaultTableModel) jTable.getModel();
+                dModel.setRowCount(0);
+                for (Object[] row : obj) {
+                    dModel.addRow(row);
+                }
+                
+                jTable.setModel(dModel);
+                jTable.revalidate();
+                jTable.repaint();
+                int count = jTable.getRowCount();
+                countTextField.setText(String.valueOf(count));
+            }
+           
+            
+            //check Semester Status
+            ps = connect.prepareStatement("SELECT semester_status FROM `t14_semester` WHERE T14_id = ?");
+            ps.setString(1, idT14);
+            rs = ps.executeQuery();
+            if(rs.next()){
+                if(rs.getInt(1)==0 && !courseComboBox.getItemAt(0).equals("None!") && !teacherComboBox.getItemAt(0).equals("None!")){
+                    
+                    courseComboBox.setEnabled(true);
+                    teacherComboBox.setEnabled(true);
+                    saveButton.setEnabled(true);
+                    courseComboBox.setSelectedIndex(0);
+                    teacherComboBox.setSelectedIndex(0);
+                }else{
+                    courseComboBox.setEnabled(false);
+                    teacherComboBox.setEnabled(false);
+                    saveButton.setEnabled(false);
+                }
+                
+            }else{
+                throw new SQLException("MAJOR ERROR","HY000",2);
+            }
+            
+            
+            /*
+            String [] [] temp = new String [T07_id.length][3];
+            temp[0][0] = "None!";
+            int temp_current_length = 0;
+            for(int i=0;i<T07_id.length;i++){
+               
+               ps = connect.prepareStatement("SELECT T12_id,T08_id_fk FROM `t12_unique_course_evaluation` WHERE T07_id_fk = ?");
+               ps.setString(1, T07_id[i]);
+               rs = ps.executeQuery();
+               while(rs.next()){
+                   temp[temp_current_length][0] = rs.getString(1);
+                   temp[temp_current_length][1] = T07_id[i];
+                   temp[temp_current_length][2] = rs.getString(2);
+                   temp_current_length++;
+                   String temp_T08id = rs.getString(2);
+                   for (int j = 0; j < T08_id.length; j++) {
+                       if (temp_T08id.equals(T08_id[j])) {
+                           String temp_course_id = courseComboBox.getItemAt(i);
+                           String temp_evaluation_set = teacherComboBox.getItemAt(j);
+                           DefaultTableModel dModel = (DefaultTableModel) jTable.getModel();
+                           
+                           Object obj[] ={temp_course_id,temp_evaluation_set};
+                           dModel.addRow(obj);
+                           
+                           jTable.setModel(dModel);
+                           jTable.revalidate();
+                           jTable.repaint();
+                           break;
+                       }
+                   }
+               }
+               
+            }
+            if (!temp[0][0].equals("None!")) {
+                prev_t12info = new String[temp_current_length][4];
+                for (int i = 0; i < prev_t12info.length; i++) {
+                    prev_t12info[i][0] = temp[i][0];
+                    prev_t12info[i][1] = temp[i][1];
+                    prev_t12info[i][2] = temp[i][2];
+                    prev_t12info[i][3] = "0";
+                }
+            }
+            courseComboBox.setSelectedIndex(0);
+            */
+        }catch(SQLException e){
+            int code = e.getErrorCode();
+            String msg = "Error Code: "+code;
+            String [] options = {"Retry","Quit"};
+            ImageIcon icon_server_retry = new ImageIcon(getClass().getResource("/icon/server_retry_64.png"));
+            int select = JOptionPane.showOptionDialog(null, "Server Connection Failed!!\n"+msg+"\nPlease,Retry Connection or Quit!", "Connection Failed!", JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE, icon_server_retry, options, options[0]);
+            if(select==0){
+                RegisterTeacherFrame rtfrm = new RegisterTeacherFrame(this.idT06,this.idT01,this.idT14);
+                rtfrm.setLocationRelativeTo(null);
+                rtfrm.setVisible(true);
+                this.dispose();
+            }else{
+                this.dispose();
+            }
+            //alert2bGeneration(2,"Server Connection Failed!!",msg,"Please,Retry Connection or Quit!","Retry","Quit","entercourseinfoFrame");
+            System.out.println(e);
+        }
+    }
+
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        jPanel1 = new javax.swing.JPanel();
+        jLabel1 = new javax.swing.JLabel();
+        jPanel2 = new javax.swing.JPanel();
+        jPanel3 = new javax.swing.JPanel();
+        jPanel5 = new javax.swing.JPanel();
+        jLabel2 = new javax.swing.JLabel();
+        semesterTextField = new javax.swing.JTextField();
+        jPanel4 = new javax.swing.JPanel();
+        jPanel9 = new javax.swing.JPanel();
+        jSeparator1 = new javax.swing.JSeparator();
+        jPanel10 = new javax.swing.JPanel();
+        jPanel14 = new javax.swing.JPanel();
+        jLabel6 = new javax.swing.JLabel();
+        jPanel6 = new javax.swing.JPanel();
+        jPanel15 = new javax.swing.JPanel();
+        jLabel5 = new javax.swing.JLabel();
+        countTextField = new javax.swing.JTextField();
+        jPanel7 = new javax.swing.JPanel();
+        jPanel13 = new javax.swing.JPanel();
+        jLabel3 = new javax.swing.JLabel();
+        courseComboBox = new javax.swing.JComboBox<>();
+        jLabel4 = new javax.swing.JLabel();
+        teacherComboBox = new javax.swing.JComboBox<>();
+        registerButton = new javax.swing.JButton();
+        deleteButton = new javax.swing.JButton();
+        jPanel8 = new javax.swing.JPanel();
+        jPanel12 = new javax.swing.JPanel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        jTable = new javax.swing.JTable();
+        jSeparator2 = new javax.swing.JSeparator();
+        jPanel11 = new javax.swing.JPanel();
+        saveButton = new javax.swing.JButton();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setTitle("Register Teacher");
+        setPreferredSize(new java.awt.Dimension(600, 600));
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosed(java.awt.event.WindowEvent evt) {
+                formWindowClosed(evt);
+            }
+        });
+
+        jPanel1.setPreferredSize(new java.awt.Dimension(234, 80));
+
+        jLabel1.setFont(new java.awt.Font("SansSerif", 1, 12)); // NOI18N
+        jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/offeredCourse_64.png"))); // NOI18N
+        jLabel1.setText("REGISTER TEACHER");
+        jPanel1.add(jLabel1);
+
+        getContentPane().add(jPanel1, java.awt.BorderLayout.NORTH);
+
+        jPanel2.setLayout(new java.awt.BorderLayout());
+
+        jPanel3.setPreferredSize(new java.awt.Dimension(10, 50));
+        jPanel3.setLayout(new java.awt.BorderLayout());
+
+        jPanel5.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER, 5, 10));
+
+        jLabel2.setFont(new java.awt.Font("SansSerif", 0, 12)); // NOI18N
+        jLabel2.setText("Semester:");
+        jPanel5.add(jLabel2);
+
+        semesterTextField.setFont(new java.awt.Font("SansSerif", 0, 12)); // NOI18N
+        semesterTextField.setPreferredSize(new java.awt.Dimension(150, 30));
+        jPanel5.add(semesterTextField);
+
+        jPanel3.add(jPanel5, java.awt.BorderLayout.CENTER);
+
+        jPanel2.add(jPanel3, java.awt.BorderLayout.NORTH);
+
+        jPanel4.setLayout(new java.awt.BorderLayout());
+
+        jPanel9.setPreferredSize(new java.awt.Dimension(100, 50));
+        jPanel9.setLayout(new java.awt.BorderLayout());
+
+        jSeparator1.setForeground(new java.awt.Color(0, 51, 153));
+        jSeparator1.setPreferredSize(new java.awt.Dimension(500, 5));
+        jPanel9.add(jSeparator1, java.awt.BorderLayout.NORTH);
+
+        jPanel14.setPreferredSize(new java.awt.Dimension(150, 35));
+        jPanel10.add(jPanel14);
+
+        jLabel6.setFont(new java.awt.Font("SansSerif", 1, 12)); // NOI18N
+        jLabel6.setForeground(new java.awt.Color(0, 51, 153));
+        jLabel6.setText("Register Teachers to Offered Courses");
+        jLabel6.setToolTipText("");
+        jPanel10.add(jLabel6);
+
+        jPanel6.setPreferredSize(new java.awt.Dimension(150, 35));
+
+        jPanel15.setPreferredSize(new java.awt.Dimension(35, 10));
+        jPanel6.add(jPanel15);
+
+        jLabel5.setFont(new java.awt.Font("SansSerif", 0, 12)); // NOI18N
+        jLabel5.setText("Count:");
+        jPanel6.add(jLabel5);
+
+        countTextField.setFont(new java.awt.Font("SansSerif", 0, 12)); // NOI18N
+        countTextField.setPreferredSize(new java.awt.Dimension(40, 23));
+        countTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                countTextFieldActionPerformed(evt);
+            }
+        });
+        jPanel6.add(countTextField);
+
+        jPanel10.add(jPanel6);
+
+        jPanel9.add(jPanel10, java.awt.BorderLayout.PAGE_END);
+
+        jPanel4.add(jPanel9, java.awt.BorderLayout.NORTH);
+
+        jPanel7.setPreferredSize(new java.awt.Dimension(200, 100));
+        jPanel7.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER, 10, 40));
+
+        jPanel13.setPreferredSize(new java.awt.Dimension(2, 2));
+        jPanel7.add(jPanel13);
+
+        jLabel3.setFont(new java.awt.Font("SansSerif", 0, 12)); // NOI18N
+        jLabel3.setText("Course:");
+        jPanel7.add(jLabel3);
+
+        courseComboBox.setFont(new java.awt.Font("SansSerif", 0, 12)); // NOI18N
+        courseComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "None!" }));
+        courseComboBox.setPreferredSize(new java.awt.Dimension(120, 30));
+        courseComboBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                courseComboBoxActionPerformed(evt);
+            }
+        });
+        jPanel7.add(courseComboBox);
+
+        jLabel4.setFont(new java.awt.Font("SansSerif", 0, 12)); // NOI18N
+        jLabel4.setText("Teacher: ");
+        jPanel7.add(jLabel4);
+
+        teacherComboBox.setFont(new java.awt.Font("SansSerif", 0, 12)); // NOI18N
+        teacherComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "None!" }));
+        teacherComboBox.setPreferredSize(new java.awt.Dimension(120, 30));
+        teacherComboBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                teacherComboBoxActionPerformed(evt);
+            }
+        });
+        jPanel7.add(teacherComboBox);
+
+        registerButton.setFont(new java.awt.Font("SansSerif", 0, 12)); // NOI18N
+        registerButton.setText("REGISTER");
+        registerButton.setPreferredSize(new java.awt.Dimension(120, 30));
+        registerButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                registerButtonActionPerformed(evt);
+            }
+        });
+        jPanel7.add(registerButton);
+
+        deleteButton.setFont(new java.awt.Font("SansSerif", 0, 12)); // NOI18N
+        deleteButton.setText("DELETE");
+        deleteButton.setPreferredSize(new java.awt.Dimension(120, 30));
+        deleteButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                deleteButtonActionPerformed(evt);
+            }
+        });
+        jPanel7.add(deleteButton);
+
+        jPanel4.add(jPanel7, java.awt.BorderLayout.WEST);
+
+        jPanel8.setLayout(new java.awt.BorderLayout(10, 10));
+
+        jPanel12.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER, 10, 10));
+
+        jTable.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+        jTable.setFont(new java.awt.Font("SansSerif", 0, 12)); // NOI18N
+        jTable.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "Offered Course", "Teacher"
+            }
+        ));
+        jScrollPane1.setViewportView(jTable);
+
+        jPanel12.add(jScrollPane1);
+
+        jPanel8.add(jPanel12, java.awt.BorderLayout.CENTER);
+
+        jPanel4.add(jPanel8, java.awt.BorderLayout.CENTER);
+
+        jPanel2.add(jPanel4, java.awt.BorderLayout.CENTER);
+
+        jSeparator2.setForeground(new java.awt.Color(0, 51, 153));
+        jSeparator2.setPreferredSize(new java.awt.Dimension(500, 10));
+        jPanel2.add(jSeparator2, java.awt.BorderLayout.SOUTH);
+
+        getContentPane().add(jPanel2, java.awt.BorderLayout.CENTER);
+
+        jPanel11.setPreferredSize(new java.awt.Dimension(100, 60));
+        jPanel11.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER, 5, 10));
+
+        saveButton.setFont(new java.awt.Font("SansSerif", 0, 12)); // NOI18N
+        saveButton.setText("SAVE");
+        saveButton.setPreferredSize(new java.awt.Dimension(120, 30));
+        saveButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                saveButtonActionPerformed(evt);
+            }
+        });
+        jPanel11.add(saveButton);
+
+        getContentPane().add(jPanel11, java.awt.BorderLayout.SOUTH);
+
+        pack();
+    }// </editor-fold>//GEN-END:initComponents
+
+    private void registerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_registerButtonActionPerformed
+        // TODO add your handling code here:
+        if(courseComboBox.getItemAt(0).equals("None!")){
+            ImageIcon error = new ImageIcon(getClass().getResource("/icon/error_2_64.png"));
+            JOptionPane.showMessageDialog(this, "No Course Exists!", "Error!", JOptionPane.ERROR_MESSAGE, error);
+            courseComboBox.setEnabled(false);
+            teacherComboBox.setEnabled(false);
+            saveButton.setEnabled(false);
+            deleteButton.setEnabled(false);
+            registerButton.setEnabled(false);
+            return;
+        }
+        if(teacherComboBox.getItemAt(0).equals("None!")){
+            ImageIcon error = new ImageIcon(getClass().getResource("/icon/error_2_64.png"));
+            JOptionPane.showMessageDialog(this, "No Teacher Exists!", "Error!", JOptionPane.ERROR_MESSAGE, error);
+            courseComboBox.setEnabled(false);
+            teacherComboBox.setEnabled(false);
+            saveButton.setEnabled(false);
+            deleteButton.setEnabled(false);
+            registerButton.setEnabled(false);
+            return;
+        }
+        Object input_row[] = {courseComboBox.getSelectedItem(), teacherComboBox.getSelectedItem()};
+        DefaultTableModel dModel = (DefaultTableModel) jTable.getModel();
+        dModel.addRow(input_row);
+
+        jTable.setModel(dModel);
+        jTable.revalidate();
+        jTable.repaint();
+        courseComboBox.setSelectedIndex(courseComboBox.getSelectedIndex());
+        int count = jTable.getRowCount();
+        countTextField.setText(String.valueOf(count));
+        
+    }//GEN-LAST:event_registerButtonActionPerformed
+
+    private void deleteButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteButtonActionPerformed
+        // TODO add your handling code here:
+        if(courseComboBox.getItemAt(0).equals("None!")){
+            ImageIcon error = new ImageIcon(getClass().getResource("/icon/error_2_64.png"));
+            JOptionPane.showMessageDialog(this, "No Course Exists!", "Error!", JOptionPane.ERROR_MESSAGE, error);
+            courseComboBox.setEnabled(false);
+            teacherComboBox.setEnabled(false);
+            saveButton.setEnabled(false);
+            deleteButton.setEnabled(false);
+            registerButton.setEnabled(false);
+            return;
+        }
+        if(teacherComboBox.getItemAt(0).equals("None!")){
+            ImageIcon error = new ImageIcon(getClass().getResource("/icon/error_2_64.png"));
+            JOptionPane.showMessageDialog(this, "No Teacher Exists!", "Error!", JOptionPane.ERROR_MESSAGE, error);
+            courseComboBox.setEnabled(false);
+            teacherComboBox.setEnabled(false);
+            saveButton.setEnabled(false);
+            deleteButton.setEnabled(false);
+            registerButton.setEnabled(false);
+            return;
+        }
+        
+        if(delete_row_index>-1){
+            DefaultTableModel dModel = (DefaultTableModel) jTable.getModel();
+            dModel.removeRow(delete_row_index);
+            
+            jTable.setModel(dModel);
+            jTable.revalidate();
+            jTable.repaint();
+        }
+        courseComboBox.setSelectedIndex(courseComboBox.getSelectedIndex());
+        int count = jTable.getRowCount();
+        countTextField.setText(String.valueOf(count));
+        
+    }//GEN-LAST:event_deleteButtonActionPerformed
+
+    private void courseComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_courseComboBoxActionPerformed
+        // TODO add your handling code here:
+        
+        String temp_course_id = courseComboBox.getSelectedItem().toString();
+        boolean flag = true;
+        
+        for(int i=0;i<jTable.getRowCount();i++){
+            if(temp_course_id.equals(jTable.getValueAt(i, 0).toString())){
+                teacherComboBox.setSelectedItem(jTable.getValueAt(i, 1));
+                registerButton.setEnabled(false);
+                deleteButton.setEnabled(true);
+                teacherComboBox.setEnabled(false);
+                flag = false;
+                delete_row_index = i;
+                break;
+            }
+        }
+        if(flag){
+            registerButton.setEnabled(true);
+            deleteButton.setEnabled(false);
+            teacherComboBox.setEnabled(true);
+            delete_row_index = -1;
+        }
+        
+    }//GEN-LAST:event_courseComboBoxActionPerformed
+
+    private void saveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveButtonActionPerformed
+        // TODO add your handling code here:
+        int row_count = jTable.getRowCount();
+        PreparedStatement ps;
+        try {
+            connect.setAutoCommit(false);
+            for(int i=0;i<row_count;i++){
+                DefaultComboBoxModel dComboModel = (DefaultComboBoxModel) courseComboBox.getModel();
+                int index_T07 = dComboModel.getIndexOf(jTable.getValueAt(i, 0));
+                dComboModel = (DefaultComboBoxModel) teacherComboBox.getModel();
+                int index_T16 = dComboModel.getIndexOf(jTable.getValueAt(i, 1));
+                //System.out.println(prev_T15info.length);
+                for(int j=0;j<prev_T15info.length;j++){
+                    
+                    
+                    if(T07_id[index_T07].equals(prev_T15info[j][1])){
+                        if(T16_id[index_T16].equals(prev_T15info[j][3])){
+                            prev_T15info[j][0] ="-1";
+                            break;
+                        }else{
+                            //update
+                            ps = connect.prepareStatement("UPDATE `t15_offered_course` SET `T16_id_fk`=? WHERE T15_id = ?");
+                            ps.setString(1, T16_id[index_T16]);
+                            ps.setString(2, prev_T15info[j][0]);
+                            if(ps.executeUpdate()<=0){
+                                throw new SQLException("Update Error!");
+                            }
+                            
+                            prev_T15info[j][0] ="-1";
+                            ps = connect.prepareStatement("UPDATE `t16_employee` SET `status`= 1 WHERE T16_id = ?");
+                            ps.setString(1, T16_id[index_T16]);
+                            if(ps.executeUpdate()<=0){
+                                throw new SQLException("Update Error!");
+                            }
+                            break;
+                        }
+                    }else if(j == prev_T15info.length-1){
+                        ps = connect.prepareStatement("UPDATE `t15_offered_course` SET `T16_id_fk`=? WHERE T15_id = ?");
+                        ps.setString(1, T16_id[index_T16]);
+                        ps.setString(2, T15_id[index_T07]);
+                        
+                        if (ps.executeUpdate() <= 0) {
+                            throw new SQLException("Update Error!");
+                        }
+                        ps = connect.prepareStatement("UPDATE `t16_employee` SET `status`= 1 WHERE T16_id = ?");
+                        ps.setString(1, T16_id[index_T16]);
+                        if (ps.executeUpdate() <= 0) {
+                            throw new SQLException("Update Error!");
+                        }
+                    }
+                }
+                
+            }
+            
+            //delete data that is not present in new data
+            for(int i=0;!prev_T15info[0][0].equals("None!") && i<prev_T15info.length  ;i++){
+                if(!prev_T15info[i][0].equals("-1")){
+                    ps = connect.prepareStatement("UPDATE `t15_offered_course` SET `T16_id_fk`= NULL WHERE T15_id = ?");
+                    ps.setString(1, prev_T15info[i][0]);
+                    if (ps.executeUpdate() <= 0) {
+                        throw new SQLException("Update Error!");
+                    }
+                }
+            }
+            
+            
+            //check semester status
+            ps = connect.prepareStatement("SELECT semester_status FROM `t14_semester` WHERE T14_id = ?");
+            ps.setString(1, idT14);
+            ResultSet rs = ps.executeQuery();
+            if(rs.next() && rs.getInt(1)==0){
+                //good
+            }else{
+                throw new SQLException("Update Error!");
+            }
+            
+            
+            connect.commit();
+            connect.setAutoCommit(true);
+            ImageIcon success = new ImageIcon(getClass().getResource("/icon/success_64.png"));
+            JOptionPane.showMessageDialog(this, "Teacher Register Successful!", "Success!", JOptionPane.ERROR_MESSAGE, success);
+            this.dispose();
+            /*
+            for (int i = 0; i < row_count; i++) {
+                
+               
+                
+                
+                if ((!T12_id[0].equals("None!")) && T12_id.length > i) {
+                    //update
+                    PreparedStatement ps = connect.prepareStatement("UPDATE t12_unique_course_evaluation SET T07_id_fk = ?,T08_id_fk = ? WHERE T12_id = ?");
+                    DefaultComboBoxModel dComboModel = (DefaultComboBoxModel) courseComboBox.getModel();
+                    int temp_index = dComboModel.getIndexOf(jTable.getValueAt(i, 0));
+                    ps.setString(1, T07_id[temp_index]);
+                    
+                    dComboModel = (DefaultComboBoxModel) evaluationSet.getModel();
+                    temp_index = dComboModel.getIndexOf(jTable.getValueAt(i, 1));
+                    ps.setString(2, T08_id[temp_index]);
+                    
+                    ps.setString(3, T12_id[i]);
+                    ps.executeUpdate();
+                    
+                } else {
+                    //Insert
+                    PreparedStatement ps = connect.prepareStatement("INSERT INTO `t12_unique_course_evaluation`(`T07_id_fk`, `T08_id_fk`) VALUES (?,?)");
+                    DefaultComboBoxModel dComboModel = (DefaultComboBoxModel) courseComboBox.getModel();
+                    int temp_index = dComboModel.getIndexOf(jTable.getValueAt(i, 0));
+                    ps.setString(1, T07_id[temp_index]);
+                    
+                    dComboModel = (DefaultComboBoxModel) evaluationSet.getModel();
+                    temp_index = dComboModel.getIndexOf(jTable.getValueAt(i, 1));
+                    ps.setString(2, T08_id[temp_index]);
+                    
+                    ps.executeUpdate();
+                       
+                }
+                
+            }
+            if (T12_id.length > row_count) {
+                for(int i=row_count;i<T12_id.length;i++){
+                    PreparedStatement ps = connect.prepareStatement("DELETE FROM `t12_unique_course_evaluation` WHERE T12_id = ?");
+                    ps.setString(1, T12_id[i]);
+                    ps.executeUpdate();
+                }
+            }
+            
+            PreparedStatement ps = connect.prepareStatement("UPDATE `t06_syllabus` SET `default_T08_id_fk`= ? WHERE T06_id = ?");
+            
+            ps.setString(1, T08_id[defaultSet.getSelectedIndex()]);
+            ps.setString(2, idT06);
+            ps.executeUpdate();
+            
+            ImageIcon success = new ImageIcon(getClass().getResource("/icon/success_64.png"));
+            JOptionPane.showMessageDialog(this, "Evaluation Set Entry Successful!", "Success!", JOptionPane.ERROR_MESSAGE, success);
+            
+            */
+        }catch (SQLException ex) {
+            try {
+                connect.rollback();
+                connect.setAutoCommit(true);
+            } catch (SQLException ex1) {
+                Logger.getLogger(OfferedCourseFrame.class.getName()).log(Level.SEVERE, null, ex1);
+            }
+            Logger.getLogger(EndSemesterFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(EndSemesterFrame.class.getName()).log(Level.SEVERE, null, ex);
+            
+            ImageIcon icon_server_error = new ImageIcon(getClass().getResource("/icon/server_error_2_64.png"));
+            ImageIcon icon_data_error = new ImageIcon(getClass().getResource("/icon/error_data_64.png"));
+
+            
+            int code = ex.getErrorCode();
+            String error = ex.getMessage();
+            String msg = "Error Code: " + code;
+            String[] options = {"OK"};
+            if (error.equals("Delete Error!") || error.equals("Update Error!") || error.equals("Insert Error!") ) {
+                JOptionPane.showMessageDialog(this, "Error: "+error, "DataBase Error!", JOptionPane.ERROR_MESSAGE, icon_data_error);
+
+            } else if (code == 0) {
+                this.reConnection();
+                int select = JOptionPane.showOptionDialog(this, "Error Server Connection!!\n" + msg + "\nTry Again!", "Connection Failed!",
+                        JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE, icon_server_error, options, options[0]);
+                if (select == JOptionPane.CLOSED_OPTION || select == 0) {
+                    this.reConnection();
+                }
+            } else {
+                JOptionPane.showOptionDialog(this, "Error in Data Entry!!\n" + msg + "\nTry Again!", "Data Entry Failed!",
+                        JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE, icon_data_error, options, options[0]);
+            }
+        }
+        
+    }//GEN-LAST:event_saveButtonActionPerformed
+
+    private void teacherComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_teacherComboBoxActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_teacherComboBoxActionPerformed
+
+    private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
+        // TODO add your handling code here:
+        ofcfrm.setEnabled(true);
+        ofcfrm.setAlwaysOnTop(true);
+        ofcfrm.setAlwaysOnTop(false);
+    }//GEN-LAST:event_formWindowClosed
+
+    private void countTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_countTextFieldActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_countTextFieldActionPerformed
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String args[]) {
+        /* Set the Nimbus look and feel */
+        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         */
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (ClassNotFoundException ex) {
+            java.util.logging.Logger.getLogger(RegisterTeacherFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (InstantiationException ex) {
+            java.util.logging.Logger.getLogger(RegisterTeacherFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (IllegalAccessException ex) {
+            java.util.logging.Logger.getLogger(RegisterTeacherFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+            java.util.logging.Logger.getLogger(RegisterTeacherFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+
+        /* Create and display the form */
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new RegisterTeacherFrame("default","default","default").setVisible(true);
+            }
+        });
+    }
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JTextField countTextField;
+    private javax.swing.JComboBox<String> courseComboBox;
+    private javax.swing.JButton deleteButton;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel10;
+    private javax.swing.JPanel jPanel11;
+    private javax.swing.JPanel jPanel12;
+    private javax.swing.JPanel jPanel13;
+    private javax.swing.JPanel jPanel14;
+    private javax.swing.JPanel jPanel15;
+    private javax.swing.JPanel jPanel2;
+    private javax.swing.JPanel jPanel3;
+    private javax.swing.JPanel jPanel4;
+    private javax.swing.JPanel jPanel5;
+    private javax.swing.JPanel jPanel6;
+    private javax.swing.JPanel jPanel7;
+    private javax.swing.JPanel jPanel8;
+    private javax.swing.JPanel jPanel9;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JSeparator jSeparator1;
+    private javax.swing.JSeparator jSeparator2;
+    private javax.swing.JTable jTable;
+    private javax.swing.JButton registerButton;
+    private javax.swing.JButton saveButton;
+    private javax.swing.JTextField semesterTextField;
+    private javax.swing.JComboBox<String> teacherComboBox;
+    // End of variables declaration//GEN-END:variables
+}

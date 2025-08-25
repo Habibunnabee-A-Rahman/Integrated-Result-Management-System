@@ -1,0 +1,505 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
+ */
+package Mi7.irms;
+
+
+import java.awt.Dimension;
+import java.awt.Toolkit;
+import java.sql.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+/**
+ *
+ * @author himal
+ */
+public class EditSchoolFrame extends javax.swing.JFrame {
+
+    /**
+     * Creates new form EnterUniversity
+     */
+    Connection connect;
+    Statement stmt;
+    String existing_id="";
+    String uni_id = "";
+    String T01_id = "";
+    
+    void reConnection(){
+        try{
+            connect = DriverManager.getConnection("jdbc:mysql://localhost:3306/irms_db","irms_main","Mi7*sub-Pro-IRMS");
+            
+            
+        }catch(SQLException e){
+            System.out.println(e);
+        }
+        
+    }
+    void alert2bGeneration(int c,String msg1,String msg2,String msg3,String btext1,String btext2,String parent){
+        
+        
+        this.setEnabled(false);
+        AlertFrame2B a2frm = new AlertFrame2B(c,msg1,msg2,msg3,btext1,btext2);
+        a2frm.passEditSchoolFrame(this, parent);
+        a2frm.setLocationRelativeTo(null);
+        a2frm.setAlwaysOnTop(true);
+        a2frm.setVisible(true);         
+        
+    }
+    
+    void alertGeneration(int c,String msg1,String msg2,String msg3){
+        
+        
+        this.setEnabled(false);
+        AlertFrame afrm = new AlertFrame(c,msg1,msg2,msg3);
+        afrm.passEditSchoolFrame(this,"editschoolframe");
+        
+        int x = getLocationOnScreen().x;   // location of frame
+        int y=getLocationOnScreen().y;
+        int w=getSize().width;           // size of frame
+        int h=getSize().height;
+        afrm.setLocation(x+w/4, y+h/4);
+        
+        afrm.setAlwaysOnTop(true);
+        afrm.setVisible(true);
+    }
+    
+    void deleteSchool(String delete_id){
+        PreparedStatement ps;
+        try {
+            
+            ps = connect.prepareStatement("SELECT * FROM `t03_school` WHERE school_id = ? AND T01_id_fk = ?;");
+            ps.setString(1, delete_id);
+            ps.setString(2, T01_id);
+            ResultSet rs = ps.executeQuery();
+            if(!rs.next()){
+                
+                alertGeneration(6,"Error in Data Entry!!","School ID doesn't exist","Try Again!");
+                SchoolID.setText("");
+                SchoolName.setText("");
+                existingSchoolID.setText("");
+                SchoolID.setEnabled(false);
+                SchoolName.setEnabled(false);
+                updateButton.setEnabled(false);
+                deleteButton.setEnabled(false);
+                return;
+            }
+            
+            ps = connect.prepareStatement("DELETE FROM `t03_school` WHERE `t03_school`.`school_id` = ? AND `t03_school`.`T01_id_fk` = ?;");
+            ps.setString(1, delete_id);
+            ps.setString(2, T01_id);
+            ps.execute();
+            
+            
+            alertGeneration(5,"School Delete Successful!!","","");
+            SchoolID.setText("");
+            SchoolName.setText("");
+            existingSchoolID.setText("");
+            SchoolID.setEnabled(false);
+            SchoolName.setEnabled(false);
+            updateButton.setEnabled(false);
+            deleteButton.setEnabled(false);
+            
+        } catch (SQLException ex) {
+            //Logger.getLogger(EnterUniversityFrame.class.getName()).log(Level.SEVERE, null, ex);
+            int code = ex.getErrorCode();
+            if(code == 0){
+                String msg = "Error Code: "+code;
+                alertGeneration(3,"Error in Server Connection!!",msg,"Try Again!");
+                System.out.println(ex);
+            }else{
+                String msg = "Error Code: "+code;
+                alertGeneration(6,"Error in Data Entry!!",msg,"Try Again!");
+                System.out.println(ex);
+            }
+            System.out.println("ERROR!! :  "+code);
+        }
+    }
+    
+    public EditSchoolFrame(String uni_id) {
+        initComponents();
+        this.uni_id = uni_id;
+        try{
+            PreparedStatement ps;
+            connect = DriverManager.getConnection("jdbc:mysql://localhost:3306/irms_db","irms_main","Mi7*sub-Pro-IRMS");
+            ps = connect.prepareStatement("SELECT T01_id FROM `t01_university` WHERE university_id = ?");
+            ps.setString(1, uni_id);
+            ResultSet rs = ps.executeQuery();
+            while(rs.next()){
+                T01_id = rs.getString(1);
+            }
+            SchoolID.setEnabled(false);
+            SchoolName.setEnabled(false);
+            updateButton.setEnabled(false);
+            deleteButton.setEnabled(false);
+        }catch(SQLException e){
+            int code = e.getErrorCode();
+            String msg = "Error Code: "+code;
+            alert2bGeneration(2,"Server Connection Failed!!",msg,"Please,Retry Connection or Quit!","Retry","Quit","EditSchoolFrame");
+            System.out.println(e);
+        }
+    }
+
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        jPanel1 = new javax.swing.JPanel();
+        jPanel9 = new javax.swing.JPanel();
+        jLabel1 = new javax.swing.JLabel();
+        viewTableButton = new javax.swing.JButton();
+        jPanel2 = new javax.swing.JPanel();
+        jPanel3 = new javax.swing.JPanel();
+        jLabel2 = new javax.swing.JLabel();
+        existingSchoolID = new javax.swing.JTextField();
+        searchButton = new javax.swing.JButton();
+        deleteButton = new javax.swing.JButton();
+        jPanel8 = new javax.swing.JPanel();
+        jLabel6 = new javax.swing.JLabel();
+        jSeparator1 = new javax.swing.JSeparator();
+        jPanel7 = new javax.swing.JPanel();
+        jLabel4 = new javax.swing.JLabel();
+        SchoolID = new javax.swing.JTextField();
+        jPanel4 = new javax.swing.JPanel();
+        jLabel3 = new javax.swing.JLabel();
+        SchoolName = new javax.swing.JTextField();
+        jPanel6 = new javax.swing.JPanel();
+        updateButton = new javax.swing.JButton();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setTitle("Edit School");
+        setPreferredSize(new java.awt.Dimension(482, 520));
+        setResizable(false);
+
+        jPanel1.setPreferredSize(new java.awt.Dimension(0, 80));
+        jPanel1.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER, 25, 5));
+
+        jPanel9.setPreferredSize(new java.awt.Dimension(90, 10));
+        jPanel1.add(jPanel9);
+
+        jLabel1.setFont(new java.awt.Font("SansSerif", 1, 12)); // NOI18N
+        jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/eraser_64.png"))); // NOI18N
+        jLabel1.setText("EDIT SCHOOL INFO.");
+        jPanel1.add(jLabel1);
+
+        viewTableButton.setFont(new java.awt.Font("SansSerif", 0, 12)); // NOI18N
+        viewTableButton.setText("View Table");
+        viewTableButton.setPreferredSize(new java.awt.Dimension(100, 30));
+        viewTableButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                viewTableButtonActionPerformed(evt);
+            }
+        });
+        jPanel1.add(viewTableButton);
+
+        getContentPane().add(jPanel1, java.awt.BorderLayout.NORTH);
+
+        jPanel2.setLayout(new java.awt.GridLayout(5, 1));
+
+        jPanel3.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER, 5, 10));
+
+        jLabel2.setFont(new java.awt.Font("SansSerif", 0, 12)); // NOI18N
+        jLabel2.setText("          Existing School ID : ");
+        jPanel3.add(jLabel2);
+
+        existingSchoolID.setFont(new java.awt.Font("SansSerif", 0, 12)); // NOI18N
+        existingSchoolID.setPreferredSize(new java.awt.Dimension(200, 30));
+        existingSchoolID.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                existingSchoolIDKeyPressed(evt);
+            }
+        });
+        jPanel3.add(existingSchoolID);
+
+        searchButton.setFont(new java.awt.Font("SansSerif", 0, 12)); // NOI18N
+        searchButton.setText("Search Info.");
+        searchButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                searchButtonActionPerformed(evt);
+            }
+        });
+        jPanel3.add(searchButton);
+
+        deleteButton.setFont(new java.awt.Font("SansSerif", 0, 12)); // NOI18N
+        deleteButton.setText("Delete School");
+        deleteButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                deleteButtonActionPerformed(evt);
+            }
+        });
+        jPanel3.add(deleteButton);
+
+        jPanel2.add(jPanel3);
+
+        jPanel8.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER, 5, 15));
+
+        jLabel6.setFont(new java.awt.Font("SansSerif", 1, 12)); // NOI18N
+        jLabel6.setForeground(new java.awt.Color(0, 51, 153));
+        jLabel6.setText("***Change the Information below if you want to update");
+        jLabel6.setToolTipText("");
+        jPanel8.add(jLabel6);
+
+        jSeparator1.setForeground(new java.awt.Color(0, 51, 153));
+        jSeparator1.setPreferredSize(new java.awt.Dimension(500, 10));
+        jPanel8.add(jSeparator1);
+
+        jPanel2.add(jPanel8);
+
+        jLabel4.setFont(new java.awt.Font("SansSerif", 0, 12)); // NOI18N
+        jLabel4.setText("School ID             : ");
+        jLabel4.setToolTipText("");
+        jPanel7.add(jLabel4);
+
+        SchoolID.setFont(new java.awt.Font("SansSerif", 0, 12)); // NOI18N
+        SchoolID.setPreferredSize(new java.awt.Dimension(200, 30));
+        SchoolID.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                SchoolIDActionPerformed(evt);
+            }
+        });
+        jPanel7.add(SchoolID);
+
+        jPanel2.add(jPanel7);
+
+        jLabel3.setFont(new java.awt.Font("SansSerif", 0, 12)); // NOI18N
+        jLabel3.setText("School Name      : ");
+        jLabel3.setToolTipText("");
+        jPanel4.add(jLabel3);
+
+        SchoolName.setFont(new java.awt.Font("SansSerif", 0, 12)); // NOI18N
+        SchoolName.setPreferredSize(new java.awt.Dimension(200, 30));
+        SchoolName.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                SchoolNameActionPerformed(evt);
+            }
+        });
+        jPanel4.add(SchoolName);
+
+        jPanel2.add(jPanel4);
+
+        jPanel6.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER, 100, 10));
+
+        updateButton.setFont(new java.awt.Font("SansSerif", 0, 12)); // NOI18N
+        updateButton.setText("UPDATE");
+        updateButton.setPreferredSize(new java.awt.Dimension(150, 30));
+        updateButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                updateButtonActionPerformed(evt);
+            }
+        });
+        jPanel6.add(updateButton);
+
+        jPanel2.add(jPanel6);
+
+        getContentPane().add(jPanel2, java.awt.BorderLayout.CENTER);
+
+        pack();
+    }// </editor-fold>//GEN-END:initComponents
+
+    private void SchoolNameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SchoolNameActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_SchoolNameActionPerformed
+
+    private void updateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updateButtonActionPerformed
+        // TODO add your handling code here:
+        //ADD Button
+        String school_id = SchoolID.getText().trim();
+        String school_name = SchoolName.getText().trim();
+        String past_id = existingSchoolID.getText().trim();
+        if(school_id.isEmpty() || school_name.isEmpty() || past_id.isEmpty()){
+            alertGeneration(6,"Error in Data Entry!!","Data Field is Empty!","Try Again!");
+            return;
+        }
+        PreparedStatement ps;
+        try {
+            ps = connect.prepareStatement("SELECT * FROM `t03_school` WHERE school_id = ? AND T01_id_fk = ?;");
+            ps.setString(1, past_id);
+            ps.setString(2,T01_id);
+            ResultSet rs = ps.executeQuery();
+            if(!rs.next()){
+                
+                alertGeneration(6,"Error in Data Entry!!","School ID doesn't exist","Try Again!");
+                SchoolID.setText("");
+                SchoolName.setText("");
+                existingSchoolID.setText("");
+                SchoolID.setEnabled(false);
+                SchoolName.setEnabled(false);
+                updateButton.setEnabled(false);
+                deleteButton.setEnabled(false);
+                return;
+            }
+            ps = connect.prepareStatement("UPDATE `t03_school` SET `school_id` = ?, `school_name` = ? WHERE `t03_school`.`school_id` = ? AND `t03_school`.`T01_id_fk` = ?;");
+            ps.setString(1, school_id);
+            ps.setString(2, school_name);
+            ps.setString(3, past_id);
+            ps.setString(4, T01_id);
+            ps.execute();
+            
+            
+            alertGeneration(5,"School Information Update Successful!!","","");
+            SchoolID.setText("");
+            SchoolName.setText("");
+            existingSchoolID.setText("");
+            SchoolID.setEnabled(false);
+            SchoolName.setEnabled(false);
+            updateButton.setEnabled(false);
+            deleteButton.setEnabled(false);
+            
+        } catch (SQLException ex) {
+            //Logger.getLogger(EnterUniversityFrame.class.getName()).log(Level.SEVERE, null, ex);
+            int code = ex.getErrorCode();
+            if(code == 0){
+                String msg = "Error Code: "+code;
+                alertGeneration(3,"Error in Server Connection!!",msg,"Try Again!");
+                System.out.println(ex);
+            }else{
+                String msg = "Error Code: "+code;
+                alertGeneration(6,"Error in Data Entry!!",msg,"Try Again!");
+                System.out.println(ex);
+            }
+            System.out.println("ERROR!! :  "+code);
+        }
+        
+    }//GEN-LAST:event_updateButtonActionPerformed
+
+    private void viewTableButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_viewTableButtonActionPerformed
+        // TODO add your handling code here:
+        String [] tables = new String [] {"t03_school"};
+        ViewTableFrame vtfrm = new ViewTableFrame(tables);
+        vtfrm.passT01_id(T01_id);
+        vtfrm.setLocationRelativeTo(null);     //opens the frame in the middle of the screen
+        vtfrm.setVisible(true);
+    }//GEN-LAST:event_viewTableButtonActionPerformed
+
+    private void SchoolIDActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SchoolIDActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_SchoolIDActionPerformed
+
+    private void searchButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_searchButtonActionPerformed
+        // TODO add your handling code here:
+        PreparedStatement ps;
+        existing_id = existingSchoolID.getText().trim();
+        if(existing_id.isEmpty()){
+            alertGeneration(6,"Error in Data Entry!!","Data Field is Empty!","Try Again!");
+            return;
+        }
+        try {
+            ps = connect.prepareStatement("SELECT school_id,school_name FROM `t03_school` WHERE school_id = ? AND T01_id_fk = ?;");
+            ps.setString(1, existing_id);
+            ps.setString(2, T01_id);
+            ResultSet rs = ps.executeQuery();
+            boolean notfound = true;
+            while(rs.next()){
+                notfound = false;
+                SchoolID.setText(rs.getString(1));
+                SchoolID.setEnabled(true);
+                SchoolName.setText(rs.getString(2));
+                SchoolName.setEnabled(true);
+                updateButton.setEnabled(true);
+                deleteButton.setEnabled(true);
+            }
+            if(notfound){
+                alertGeneration(7,"School ID Not Found!!","Try different ID!!","Search Again!");
+                return;
+            }
+        } catch (SQLException ex) {
+            int code = ex.getErrorCode();
+            
+            String msg = "Error Code: "+code;
+            alertGeneration(3,"Error in Server Connection!!",msg,"Try Again!");
+            System.out.println(ex);
+            
+        }
+    }//GEN-LAST:event_searchButtonActionPerformed
+
+    private void deleteButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteButtonActionPerformed
+        // TODO add your handling code here:
+        existing_id = existingSchoolID.getText().trim();
+        String msg = "School ID: "+existing_id+" will be Deleted!!";
+        alert2bGeneration(3,"WARNING!!!!!",msg,"Press Proceed to Delete","Proceed","Cancel","EditSchoolFrame");
+
+    }//GEN-LAST:event_deleteButtonActionPerformed
+
+    private void existingSchoolIDKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_existingSchoolIDKeyPressed
+        // TODO add your handling code here:
+        SchoolID.setText("");
+        SchoolName.setText("");
+            
+        SchoolID.setEnabled(false);
+        SchoolName.setEnabled(false);
+        updateButton.setEnabled(false);
+        deleteButton.setEnabled(false);
+    }//GEN-LAST:event_existingSchoolIDKeyPressed
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String args[]) {
+        /* Set the Nimbus look and feel */
+        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         */
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (ClassNotFoundException ex) {
+            java.util.logging.Logger.getLogger(EditSchoolFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (InstantiationException ex) {
+            java.util.logging.Logger.getLogger(EditSchoolFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (IllegalAccessException ex) {
+            java.util.logging.Logger.getLogger(EditSchoolFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+            java.util.logging.Logger.getLogger(EditSchoolFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+
+        /* Create and display the form */
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new EditSchoolFrame("default").setVisible(true);
+            }
+        });
+    }
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JTextField SchoolID;
+    private javax.swing.JTextField SchoolName;
+    private javax.swing.JButton deleteButton;
+    private javax.swing.JTextField existingSchoolID;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel6;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
+    private javax.swing.JPanel jPanel3;
+    private javax.swing.JPanel jPanel4;
+    private javax.swing.JPanel jPanel6;
+    private javax.swing.JPanel jPanel7;
+    private javax.swing.JPanel jPanel8;
+    private javax.swing.JPanel jPanel9;
+    private javax.swing.JSeparator jSeparator1;
+    private javax.swing.JButton searchButton;
+    private javax.swing.JButton updateButton;
+    private javax.swing.JButton viewTableButton;
+    // End of variables declaration//GEN-END:variables
+}
